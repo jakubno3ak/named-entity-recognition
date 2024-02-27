@@ -14,8 +14,3 @@ if __name__ == "__main__":
     dataset = load_dataset_from_json(json_datast_full_path)
     tokenizer = AutoTokenizer.from_pretrained(CHECKPOINT)
     ner_dataset = prepare_dataset_for_ner(dataset=dataset, tokenizer=tokenizer)
-    
-    
-    
-    
-    
