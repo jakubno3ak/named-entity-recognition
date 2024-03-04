@@ -3,26 +3,13 @@ import shutil
 import zipfile
 import json
 import pandas as pd
+from tqdm import tqdm
 
 from sklearn.model_selection import train_test_split
 from datasets import load_dataset, Dataset
 from transformers import AutoTokenizer
-
-def unzip_data(zip_file_path: str, path_to_extract: str) ->  str:
-    """
-    Unzips a zip file
-    """
-    
-    print(f"Extracting {zip_file_path} to {path_to_extract}")
-    
-    if not os.path.exists(path_to_extract) and zipfile.is_zipfile(zip_file_path):
         
-        with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
-            zip_ref.extractall(path=path_to_extract)
             
-    return os.path.join(path_to_extract, "NER_Dataset.csv")
-        
-                
 def unzip_data(zip_file_path: str, path_to_extract: str) ->  str:
     """
     Unzips a zip file
@@ -40,65 +27,12 @@ def unzip_data(zip_file_path: str, path_to_extract: str) ->  str:
         Path to the unzipped file
 
     """
+
+
     print(f"Extracting {zip_file_path} to {path_to_extract}")
 
-    if not os.path.exists(path_to_extract) and zipfile.is_zipfile(zip_file_path):
-
-        with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
-            zip_ref.extractall(path=path_to_extract)
-
-    return os.path.join(path_to_extract, "NER_Dataset.csv")
-
-
-def extract_data_to_json(data_read_path: str, data_write_path: str) -> None:
-    """
-    Extracts data from a CSV file and saves it as JSON
-
-    Parameters
-    ----------
-    data_read_path : str
-        Path to the CSV file containing the data
-    data_write_path : str
-        Path to the directory where the JSON files should be saved
-
-    """
-    assert os.path.exists(data_read_path), "Data path does not exist!"
-
-    df = pd.read_csv(data_read_path)[["Word", "Tag"]]
-
-    if os.path.exists(data_write_path):
-        os.remove(data_write_path)
-    else:
-        os.makedirs(data_write_path)
-
-    with open(os.path.join(data_write_path, "data.json"), 'w') as outfile:
-        for inputs, ner_tags in zip(df["Word"], df["Tag"]):
-            outfile.write(json.dumps({"inputs": inputs, "ner_tags": ner_tags}) + "\n")
-    
-    
-def unzip_data(zip_file_path: str, path_to_extract: str) ->  str:
-    """
-    Unzips a zip file
-
-    Parameters
-    ----------
-    zip_file_path : str
-        Path to the zip file
-    path_to_extract : str
-        Path to the directory where the zip file should be extracted
-
-    Returns
-    -------
-    str
-        Path to the unzipped file
-
-    """
-    print(f"Extracting {zip_file_path} to {path_to_extract}")
-
-    if not os.path.exists(path_to_extract) and zipfile.is_zipfile(zip_file_path):
-
-        with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
-            zip_ref.extractall(path=path_to_extract)
+    with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
+        zip_ref.extractall(path=path_to_extract)
 
     return os.path.join(path_to_extract, "NER_Dataset.csv")
 
@@ -107,20 +41,23 @@ def extract_data_to_json(data_read_path: str, data_write_path: str) -> str:
     """
     Extracts data from a CSV file and saves it as JSON
     """
-    assert os.path.exists(data_read_path), "Data path does not exist!"
 
-    df = pd.read_csv(data_read_path)[["Word", "Tag"]]
+    assert os.path.exists(data_read_path), "Data path does not exist!"
 
     if os.path.exists(data_write_path):
         shutil.rmtree(data_write_path)
-    else:
-        os.makedirs(data_write_path)
+    
+    os.makedirs(data_write_path)
         
     json_dataset_path = os.path.join(data_write_path, "data.json")
 
+    print(f"Extracting data from {data_read_path} to {json_dataset_path}")
+
+    df = pd.read_csv(data_read_path)[["Word", "Tag"]]
+
     with open(json_dataset_path, 'w') as outfile:
-        for inputs, ner_tags in zip(df["Word"], df["Tag"]):
-            outfile.write(json.dumps({"inputs": inputs, "ner_tags": ner_tags}) + "\n")
+        for inputs, ner_tags in tqdm(zip(df["Word"], df["Tag"])):
+            outfile.write(json.dumps({"inputs": eval(inputs), "ner_tags": eval(ner_tags)}) + "\n")
             
     return json_dataset_path
 
@@ -183,11 +120,3 @@ def prepare_dataset_for_ner(dataset: Dataset, tokenizer: AutoTokenizer) -> Datas
     dataset = dataset["train"].train_test_split(seed=42)
     tokenized_dataset = dataset.map(tokenize_fn, batched=True, remove_columns=dataset["train"].column_names)
     return tokenized_dataset
-    
-    
-        
-    
-    
-    
-           
-
