@@ -1,5 +1,7 @@
 from transformers import AutoTokenizer
+
 from src.settings import Settings
+
 
 def create_tokenizer(settings: Settings) -> AutoTokenizer:
     """

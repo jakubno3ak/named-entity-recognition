@@ -1,16 +1,38 @@
-from src.utils import unzip_data, extract_data_to_json, load_dataset_from_json, prepare_dataset_for_ner
-from transformers import AutoTokenizer
+from src.dataset import create_dataset
+from src.settings import Settings
+from src.training import (
+    create_compute_metrics_callable,
+    create_model,
+    create_tokenizer,
+    create_trainer,
+    create_training_args,
+)
 
-CHECKPOINT = "distilbert-base-cased"
 
-ZIP_RAW_DATA_FULL_PATH = "./data/archive.zip"
-CSV_RAW_DATA_DIR_PATH = "./data/data_csv"
-JSON_DATA_DIR_PATH = "./data/data_json"
+def main():
+    settings = Settings()
+    tokenizer = create_tokenizer(settings=settings)
+    dataset, metadata = create_dataset(settings=settings, tokenizer=tokenizer)
+    model = create_model(
+        settings=settings,
+        id_to_label=metadata.id_to_label,
+        label_to_id=metadata.label_to_id,
+    )
+    compute_metrics = create_compute_metrics_callable(
+        settings=settings, metadata=metadata
+    )
+    training_args = create_training_args(settings=settings)
+    trainer = create_trainer(
+        settings=settings,
+        model=model,
+        tokenizer=tokenizer,
+        training_args=training_args,
+        compute_metrics=compute_metrics,
+        dataset=dataset,
+    )
+
+    trainer.train()
 
 
 if __name__ == "__main__":
-    csv_raw_data_full_path: str = unzip_data(ZIP_RAW_DATA_FULL_PATH, CSV_RAW_DATA_DIR_PATH)
-    json_datast_full_path = extract_data_to_json(data_read_path=csv_raw_data_full_path, data_write_path=JSON_DATA_DIR_PATH)
-    dataset = load_dataset_from_json(json_datast_full_path)
-    tokenizer = AutoTokenizer.from_pretrained(CHECKPOINT)
-    ner_dataset = prepare_dataset_for_ner(dataset=dataset, tokenizer=tokenizer)
+    main()
