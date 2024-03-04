@@ -2,7 +2,7 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     model_name: str = "distilbert-finetuned-ner"
-    checkpoint: str =  "distilbert-base-uncased"
+    checkpoint: str = "distilbert-base-uncased"
     zip_data_full_path: str = "./data/archive.zip"
     csv_data_dir_path: str = "./data/data_csv"
     json_data_dir_path: str = "./data/data_json"
